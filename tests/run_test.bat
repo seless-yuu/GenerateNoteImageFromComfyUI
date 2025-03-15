@@ -2,6 +2,9 @@
 chcp 932
 echo テスト実行開始
 
+REM ollamaプロセスの確認
+powershell -Command "$ollamaProcess = Get-Process ollama -ErrorAction SilentlyContinue; if (-not $ollamaProcess) { echo 'ollamaを起動します...'; Start-Process ollama -WindowStyle Hidden; Start-Sleep -Seconds 5 }"
+
 python ../article_to_image.py ^
   --article test_article.md ^
   --prompt "photorealistic, high quality, detailed, {content}" ^
