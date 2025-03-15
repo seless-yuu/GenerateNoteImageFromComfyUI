@@ -5,6 +5,7 @@ ComfyUIとollamaを使用して記事文章から画像を生成するプログ�
 ## 概要
 
 このプログラムは以下の手順で記事文章から画像を生成します：
+
 1. ollamaを使用して記事を分析し、画像生成用のプロンプトを生成
 2. 生成されたプロンプトと固定プロンプトを結合
 3. ComfyUIのAPIを使用して画像を生成
@@ -19,6 +20,7 @@ ComfyUIとollamaを使用して記事文章から画像を生成するプログ�
 
 1. このリポジトリをクローン
 2. 依存パッケージのインストール：
+
 ```bash
 pip install -r requirements.txt
 ```
@@ -57,6 +59,7 @@ python article_to_image.py \
 ### 利用可能なモデル
 
 VRAMの容量に応じて以下のollamaモデルを選択できます：
+
 - `gemma3:1b` (VRAM 815MB) - 軽量
 - `gemma3:4b` (VRAM 3.3GB) - デフォルト、バランス型
 - `gemma3:12b` (VRAM 8.1GB) - 高品質
@@ -75,6 +78,7 @@ VRAMの容量に応じて以下のollamaモデルを選択できます：
 ## テスト
 
 `tests`ディレクトリのテストスクリプトを実行：
+
 ```bash
 cd tests
 run_test.bat

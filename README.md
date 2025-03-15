@@ -5,6 +5,7 @@ Generate images from article text using ComfyUI and ollama.
 ## Overview
 
 This program generates images from article text by:
+
 1. Using ollama to analyze the article and generate image prompts
 2. Combining the generated prompts with fixed prompts
 3. Using ComfyUI's API to generate images
@@ -19,6 +20,7 @@ This program generates images from article text by:
 
 1. Clone this repository
 2. Install dependencies:
+
 ```bash
 pip install -r requirements.txt
 ```
@@ -57,6 +59,7 @@ python article_to_image.py \
 ### Available Models
 
 You can choose different ollama models based on your VRAM capacity:
+
 - `gemma3:1b` (815MB VRAM) - Lightweight
 - `gemma3:4b` (3.3GB VRAM) - Default, balanced
 - `gemma3:12b` (8.1GB VRAM) - High quality
@@ -75,6 +78,7 @@ The program will stop and display an error message if any errors occur during ex
 ## Testing
 
 Run the test script in the `tests` directory:
+
 ```bash
 cd tests
 run_test.bat
