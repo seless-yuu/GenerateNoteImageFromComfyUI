@@ -147,7 +147,11 @@
         "name": "generate_image",
         "description": "Generate image using ComfyUI",
         "input": ["workflow_data", "final_prompt"],
-        "output": "image_name"
+        "output": "image_name",
+        "notes": {
+          "seed": "Random seed is used for image generation (seed=-1 in KSampler node)",
+          "randomization": "Each execution will produce a different image due to random seed"
+        }
       },
       {
         "order": 5,
