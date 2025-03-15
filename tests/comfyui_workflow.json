@@ -67,7 +67,7 @@
   },
   "40": {
     "inputs": {
-      "text": "low quality, bad anatomy, bad proportions, blurry, deformed, mutated, ugly, watermark, signature, text, nsfw",
+      "text": "low quality, bad anatomy, bad proportions, bad hands, blurry, deformed, mutated, ugly, watermark, signature, text, nsfw",
       "clip": [
         "42",
         0
