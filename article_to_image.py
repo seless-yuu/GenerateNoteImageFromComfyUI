@@ -4,6 +4,7 @@ import json
 import requests
 import time
 import gc
+import random
 from pathlib import Path
 
 def parse_arguments():
@@ -14,7 +15,8 @@ def parse_arguments():
     parser.add_argument('--workflow', required=True, help='ComfyUIのワークフローJSONファイルパス')
     parser.add_argument('--comfyui-url', default='http://127.0.0.1:8188', help='ComfyUI APIのURL')
     parser.add_argument('--clear-cache', action='store_true', help='実行後にComfyUIのキャッシュをクリアする')
-    parser.add_argument('--ollama-model', default='gemma3:12b', help='ollamaの使用するモデル名')
+    parser.add_argument('--ollama-model', default='gemma3:4b', help='ollamaの使用するモデル名')
+    parser.add_argument('--seed', type=int, help='画像生成用のシード値（指定しない場合はランダム）')
     return parser.parse_args()
 
 def read_article(file_path):
@@ -148,9 +150,20 @@ def clear_comfyui_cache(comfyui_url):
         print(f"ComfyUIのキャッシュクリアに失敗しました: {e}")
         return False
 
-def generate_image_with_comfyui(workflow_data, final_prompt, comfyui_url):
+def generate_image_with_comfyui(workflow_data, final_prompt, comfyui_url, seed=None):
     """ComfyUI APIを使用して画像を生成"""
     try:
+        # シード値の設定
+        if seed is None:
+            seed = random.randint(0, 0xFFFFFFFF)  # 32ビットの正の整数
+        print(f"使用するシード値: {seed}")
+        
+        # KSamplerノードのシード値を設定
+        for node_id, node in workflow_data.items():
+            if 'class_type' in node and node['class_type'] == 'KSampler':
+                node['inputs']['seed'] = seed
+                break
+        
         # テキスト入力ノードを探してプロンプトを設定
         node_id, input_key = find_text_input_node(workflow_data)
         
@@ -249,20 +262,21 @@ def main():
         # ワークフローの読み込み
         workflow_data = read_workflow(args.workflow)
         
-        # 画像生成
-        image_name = generate_image_with_comfyui(workflow_data, final_prompt, args.comfyui_url)
-        
-        # 画像保存
-        output_path = save_image(image_name, args.article, args.comfyui_url)
-        
-        print(f"画像が正常に生成されました: {output_path}")
-        
-        # ComfyUIのキャッシュをクリア（オプション）
+        # キャッシュクリアが指定されている場合は実行
         if args.clear_cache:
             clear_comfyui_cache(args.comfyui_url)
-        else:
-            print("キャッシュクリアはスキップされました。--clear-cacheオプションを使用するとVRAMを解放できます。")
         
+        # 画像生成
+        image_name = generate_image_with_comfyui(workflow_data, final_prompt, args.comfyui_url, args.seed)
+        
+        # 画像の保存
+        output_path = save_image(image_name, args.article, args.comfyui_url)
+        print(f"画像を保存しました: {output_path}")
+        
+        # 生成後のキャッシュクリア
+        if args.clear_cache:
+            clear_comfyui_cache(args.comfyui_url)
+            
     except Exception as e:
         print(f"エラーが発生しました: {e}")
         exit(1)
