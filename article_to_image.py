@@ -3,6 +3,7 @@ import os
 import json
 import requests
 import time
+import gc
 from pathlib import Path
 
 def parse_arguments():
@@ -12,6 +13,8 @@ def parse_arguments():
     parser.add_argument('--prompt', required=True, help='固定プロンプト（{content}が生成プロンプトに置換されます）')
     parser.add_argument('--workflow', required=True, help='ComfyUIのワークフローJSONファイルパス')
     parser.add_argument('--comfyui-url', default='http://127.0.0.1:8188', help='ComfyUI APIのURL')
+    parser.add_argument('--clear-cache', action='store_true', help='実行後にComfyUIのキャッシュをクリアする')
+    parser.add_argument('--ollama-model', default='gemma3:12b', help='ollamaの使用するモデル名')
     return parser.parse_args()
 
 def read_article(file_path):
@@ -30,9 +33,10 @@ def read_workflow(file_path):
     except Exception as e:
         raise Exception(f"ワークフローファイルの読み込みに失敗しました: {e}")
 
-def generate_prompt_from_article(article_text):
+def generate_prompt_from_article(article_text, model_name):
     """ollamaを使用して記事から画像生成プロンプトを生成"""
     try:
+        # 関数スコープでollamaをインポートし、使用後にクリーンアップできるようにする
         import ollama
         
         system_prompt = """
@@ -42,21 +46,38 @@ def generate_prompt_from_article(article_text):
         ただしプロンプトのみを出力し、説明や追加テキストは含めないでください。
         """
         
-        response = ollama.chat(
-            model='gemma3:12b',
-            messages=[
-                {
-                    'role': 'system',
-                    'content': system_prompt
-                },
-                {
-                    'role': 'user',
-                    'content': f"以下の記事内容から画像生成AIのプロンプトを英語で作成してください:\n\n{article_text}"
-                }
-            ]
-        )
+        print(f"ollamaモデル '{model_name}' を使用して画像生成プロンプトを作成しています...")
         
-        return response['message']['content'].strip()
+        # ollamaの処理をスコープ内に閉じ込める
+        def get_ollama_response():
+            return ollama.chat(
+                model=model_name,
+                messages=[
+                    {
+                        'role': 'system',
+                        'content': system_prompt
+                    },
+                    {
+                        'role': 'user',
+                        'content': f"以下の記事内容から画像生成AIのプロンプトを英語で作成してください:\n\n{article_text}"
+                    }
+                ]
+            )
+        
+        # プロンプト生成
+        response = get_ollama_response()
+        generated_prompt = response['message']['content'].strip()
+        
+        # モデルを明示的に解放
+        if hasattr(ollama, 'terminate') and callable(ollama.terminate):
+            ollama.terminate()
+        
+        # メモリ解放を強制
+        del ollama
+        gc.collect()
+        
+        print("ollamaのメモリを解放しました")
+        return generated_prompt
     except Exception as e:
         raise Exception(f"プロンプト生成に失敗しました: {e}")
 
@@ -78,6 +99,54 @@ def find_text_input_node(workflow_data):
                 return node_id, 'string'
             
     return None, None
+
+def clear_comfyui_cache(comfyui_url):
+    """ComfyUIのキャッシュをクリアする"""
+    try:
+        # モデルとVAEをアンロード
+        print("ComfyUIのキャッシュをクリアしています...")
+        
+        # システム情報を取得
+        system_stats_url = f"{comfyui_url}/system_stats"
+        response = requests.get(system_stats_url)
+        if response.status_code == 200:
+            print(f"クリア前のVRAM使用量: {response.json().get('cuda', {}).get('vram_usage_total', 'N/A')}")
+        
+        # インターロップAPIを使用してキャッシュをクリア
+        execution_url = f"{comfyui_url}/execute"
+        clear_payload = {
+            "clear_cache": "all"
+        }
+        response = requests.post(execution_url, json=clear_payload)
+        
+        # リクエストが成功したか確認
+        if response.status_code == 200:
+            print("ComfyUIのキャッシュをクリアしました")
+        else:
+            print(f"キャッシュクリアに失敗しました: {response.status_code} - {response.text}")
+            
+        # キューをクリア
+        queue_url = f"{comfyui_url}/queue"
+        response = requests.post(queue_url, json={"clear": True})
+        if response.status_code == 200:
+            print("ComfyUIのキューをクリアしました")
+            
+        # 履歴をクリア
+        history_url = f"{comfyui_url}/history"
+        response = requests.post(history_url, json={"clear": True})
+        if response.status_code == 200:
+            print("ComfyUIの履歴をクリアしました")
+        
+        # キャッシュクリア後のVRAM使用状況を確認
+        time.sleep(2)  # キャッシュクリアの処理が完了するまで少し待機
+        response = requests.get(system_stats_url)
+        if response.status_code == 200:
+            print(f"クリア後のVRAM使用量: {response.json().get('cuda', {}).get('vram_usage_total', 'N/A')}")
+        
+        return True
+    except Exception as e:
+        print(f"ComfyUIのキャッシュクリアに失敗しました: {e}")
+        return False
 
 def generate_image_with_comfyui(workflow_data, final_prompt, comfyui_url):
     """ComfyUI APIを使用して画像を生成"""
@@ -166,16 +235,19 @@ def main():
         # 記事の読み込み
         article_text = read_article(args.article)
         
-        # ワークフローの読み込み
-        workflow_data = read_workflow(args.workflow)
-        
-        # プロンプト生成
-        generated_prompt = generate_prompt_from_article(article_text)
+        # プロンプト生成 (ollamaを使用)
+        generated_prompt = generate_prompt_from_article(article_text, args.ollama_model)
         print(f"生成されたプロンプト: {generated_prompt}")
         
         # 最終プロンプト作成
         final_prompt = create_final_prompt(args.prompt, generated_prompt)
         print(f"最終プロンプト: {final_prompt}")
+        
+        # 明示的にメモリ解放を促す
+        gc.collect()
+        
+        # ワークフローの読み込み
+        workflow_data = read_workflow(args.workflow)
         
         # 画像生成
         image_name = generate_image_with_comfyui(workflow_data, final_prompt, args.comfyui_url)
@@ -184,6 +256,12 @@ def main():
         output_path = save_image(image_name, args.article, args.comfyui_url)
         
         print(f"画像が正常に生成されました: {output_path}")
+        
+        # ComfyUIのキャッシュをクリア（オプション）
+        if args.clear_cache:
+            clear_comfyui_cache(args.comfyui_url)
+        else:
+            print("キャッシュクリアはスキップされました。--clear-cacheオプションを使用するとVRAMを解放できます。")
         
     except Exception as e:
         print(f"エラーが発生しました: {e}")
