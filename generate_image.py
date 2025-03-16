@@ -192,9 +192,6 @@ def save_image(image_name, output_path, comfyui_url, webp_quality=80):
         image = Image.open(BytesIO(response.content))
         
         # WebP形式で保存（非可逆圧縮）
-        # quality: 0-100の範囲で指定（低いほど圧縮率が高く、画質は低下）
-        # lossless: Falseで非可逆圧縮を指定
-        # method: 0-6の範囲で圧縮方法を指定（6が最も圧縮率が高いが、処理時間も長い）
         image.save(
             output_path,
             'WEBP',
@@ -207,6 +204,7 @@ def save_image(image_name, output_path, comfyui_url, webp_quality=80):
         original_size = len(response.content)
         compressed_size = os.path.getsize(output_path)
         compression_ratio = (1 - compressed_size / original_size) * 100
+        
         print(f"圧縮率: {compression_ratio:.1f}%（{original_size:,} → {compressed_size:,} bytes）")
         
         return output_path
