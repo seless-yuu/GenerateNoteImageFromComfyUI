@@ -143,7 +143,7 @@ def generate_image_with_comfyui(workflow_data, final_prompt, comfyui_url, seed=N
         print(f"プロンプトID: {prompt_id}")
         
         # 画像生成の完了を待機
-        max_attempts = 30
+        max_attempts = 90  # 90回 × 2秒 = 180秒（3分）のタイムアウト
         attempts = 0
         
         while attempts < max_attempts:
