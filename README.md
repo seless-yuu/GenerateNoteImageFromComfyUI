@@ -1,5 +1,7 @@
 # GenerateNoteImageFromComfyUI
 
+[日本語版README](README.ja.md)
+
 Generate images from article text using ComfyUI and ollama.
 
 ## Overview
