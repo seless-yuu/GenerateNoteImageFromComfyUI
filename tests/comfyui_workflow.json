@@ -35,7 +35,7 @@
   "8": {
     "inputs": {
       "samples": [
-        "3",
+        "61",
         0
       ],
       "vae": [
@@ -91,5 +91,46 @@
       "batch_size": 1
     },
     "class_type": "EmptySD3LatentImage"
+  },
+  "60": {
+    "inputs": {
+      "samples": [
+        "3",
+        0
+      ],
+      "upscale_method": "nearest-exact",
+      "scale_by": 1.5,
+      "width": 2016,
+      "height": 1152,
+      "crop": "disabled"
+    },
+    "class_type": "LatentUpscale"
+  },
+  "61": {
+    "inputs": {
+      "seed": 0,
+      "steps": 20,
+      "cfg": 6,
+      "sampler_name": "dpmpp_2m_sde_gpu",
+      "scheduler": "karras",
+      "denoise": 0.6,
+      "model": [
+        "4",
+        0
+      ],
+      "positive": [
+        "16",
+        0
+      ],
+      "negative": [
+        "40",
+        0
+      ],
+      "latent_image": [
+        "60",
+        0
+      ]
+    },
+    "class_type": "KSampler"
   }
 } 
