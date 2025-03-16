@@ -1,16 +1,10 @@
-import requests
-import json
-import os
-from pathlib import Path
-
-# テスト用の単純なワークフロー
-WORKFLOW = {
+{
   "3": {
     "inputs": {
-      "seed": 975993290467585,
-      "steps": 20,
-      "cfg": 5.45,
-      "sampler_name": "euler",
+      "seed": 0,
+      "steps": 28,
+      "cfg": 4.5,
+      "sampler_name": "dpmpp_2m",
       "scheduler": "sgm_uniform",
       "denoise": 1,
       "model": [
@@ -34,14 +28,14 @@ WORKFLOW = {
   },
   "4": {
     "inputs": {
-      "ckpt_name": "emi-2-5.safetensors"
+      "ckpt_name": "emi3.safetensors"
     },
     "class_type": "CheckpointLoaderSimple"
   },
   "8": {
     "inputs": {
       "samples": [
-        "3",
+        "61",
         0
       ],
       "vae": [
@@ -73,7 +67,7 @@ WORKFLOW = {
   },
   "40": {
     "inputs": {
-      "text": "low quality, bad anatomy, bad proportions, blurry, deformed, mutated, ugly, watermark, signature, text, nsfw",
+      "text": "",
       "clip": [
         "42",
         0
@@ -85,40 +79,57 @@ WORKFLOW = {
     "inputs": {
       "clip_name1": "clip_l.safetensors",
       "clip_name2": "clip_g.safetensors",
-      "type": "sdxl",
+      "clip_name3": "t5xxl_fp8_e4m3fn.safetensors",
+      "type": "triple",
       "device": "default"
     },
-    "class_type": "DualCLIPLoader"
+    "class_type": "TripleCLIPLoader"
   },
   "53": {
     "inputs": {
-      "width": 1280,
-      "height": 672,
+      "width": 1024,
+      "height": 576,
       "batch_size": 1
     },
     "class_type": "EmptySD3LatentImage"
+  },
+  "60": {
+    "inputs": {
+      "samples": [
+        "3",
+        0
+      ],
+      "mode": "nearest",
+      "factor": 1,
+      "align": "true"
+    },
+    "class_type": "Latent Upscale by Factor (WAS)"
+  },
+  "61": {
+    "inputs": {
+      "seed": 0,
+      "steps": 28,
+      "cfg": 4.5,
+      "sampler_name": "dpmpp_2m",
+      "scheduler": "sgm_uniform",
+      "denoise": 0,
+      "model": [
+        "4",
+        0
+      ],
+      "positive": [
+        "16",
+        0
+      ],
+      "negative": [
+        "40",
+        0
+      ],
+      "latent_image": [
+        "60",
+        0
+      ]
+    },
+    "class_type": "KSampler"
   }
-}
-
-def test_simple_prompt():
-    """単純なプロンプトのテスト"""
-    try:
-        # APIエンドポイント
-        comfyui_url = "http://127.0.0.1:8188"
-        
-        # プロンプト実行
-        prompt_url = f"{comfyui_url}/prompt"
-        response = requests.post(prompt_url, json={"prompt": WORKFLOW})
-        
-        if response.status_code != 200:
-            print(f"エラー: {response.status_code} - {response.text}")
-            return False
-        
-        print(f"レスポンス: {response.json()}")
-        return True
-    except Exception as e:
-        print(f"テスト失敗: {e}")
-        return False
-
-if __name__ == "__main__":
-    test_simple_prompt() 
+} 
