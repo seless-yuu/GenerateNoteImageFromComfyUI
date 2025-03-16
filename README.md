@@ -70,10 +70,12 @@ python resize_image.py \
 ## Parameters
 
 ### Summarize Article
+
 - `--article`: Path to the Markdown article file
 - `--output`: Path to save the generated prompt as JSON
 
 ### Generate Image
+
 - `--prompt-file`: Path to the JSON file containing the generated prompt
 - `--fixed-prompt`: Fixed prompt template. Use `{content}` where you want to insert the generated prompt
 - `--workflow`: Path to ComfyUI workflow JSON file
@@ -82,6 +84,7 @@ python resize_image.py \
 - `--webp-quality`: (Optional) WebP compression quality (0-100, default: 80)
 
 ### Resize Image
+
 - `--input`: Path to the input image
 - `--output`: Path to save the resized image
 - `--width`: Target width in pixels
@@ -93,11 +96,13 @@ python resize_image.py \
 Two workflow configurations are provided for different models:
 
 ### SD2 Workflow
+
 - Initial generation at 1024x576
 - Upscale by factor 1.5 using Latent Upscale
 - Second pass with denoise 0.6
 
 ### SD3 Workflow
+
 - Initial generation at 1024x576
 - Upscale by factor 1.3 using Latent Upscale
 - Second pass with denoise 0.3
@@ -121,6 +126,7 @@ generate_test_sd3.bat  # Test with SD3 workflow
 ## Error Handling
 
 The program will:
+
 - Display warnings if aspect ratios differ during resizing
 - Show compression ratios and size changes
 - Stop and display error messages if any errors occur during execution
