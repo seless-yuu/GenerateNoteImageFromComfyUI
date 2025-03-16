@@ -10,6 +10,14 @@ python ..\generate_image.py ^
     --clear-cache ^
     --webp-quality 80
 
+rem 生成した画像をリサイズ
+python ..\resize_image.py ^
+    --input test_generated.webp ^
+    --output test_generated_1280x670.webp ^
+    --width 1280 ^
+    --height 670 ^
+    --quality 80
+
 echo.
 echo テスト完了
 pause 
