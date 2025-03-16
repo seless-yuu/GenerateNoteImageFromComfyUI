@@ -4,11 +4,12 @@ Generate images from article text using ComfyUI and ollama.
 
 ## Overview
 
-This program generates images from article text by:
+This program generates images from article text through the following steps:
 
 1. Using ollama to analyze the article and generate image prompts
 2. Combining the generated prompts with fixed prompts
 3. Using ComfyUI's API to generate images
+4. Resizing images to the desired dimensions
 
 ## Requirements
 
@@ -25,64 +26,104 @@ This program generates images from article text by:
 pip install -r requirements.txt
 ```
 
-## Usage
+## Commands
+
+The functionality is split into three separate commands:
+
+### 1. Summarize Article
+
+Generates a prompt from an article:
 
 ```bash
-python article_to_image.py \
+python summarize_article.py \
   --article <path_to_article.md> \
-  --prompt "your_fixed_prompt {content}" \
-  --workflow <path_to_workflow.json> \
-  --clear-cache \
-  --ollama-model <model_name>
+  --output <path_to_prompt.json>
 ```
 
-### Parameters
+### 2. Generate Image
 
-- `--article`: Path to the Markdown article file
-- `--prompt`: Fixed prompt template. Use `{content}` where you want to insert the generated prompt
-- `--workflow`: Path to ComfyUI workflow JSON file
-  - The workflow must have an "InputPrompt" node to receive the prompt text
-- `--clear-cache`: (Optional) Clear ComfyUI cache before generation
-- `--ollama-model`: (Optional) Specify ollama model (default: gemma3:4b)
-
-### Example
+Generates an image using the prompt:
 
 ```bash
-python article_to_image.py \
-  --article article.md \
-  --prompt "photorealistic, high quality, detailed, {content}" \
-  --workflow workflow.json \
+python generate_image.py \
+  --prompt-file <path_to_prompt.json> \
+  --fixed-prompt "your_fixed_prompt {content}" \
+  --workflow <path_to_workflow.json> \
+  --output <path_to_output.webp> \
   --clear-cache \
-  --ollama-model gemma3:4b
+  --webp-quality 80
 ```
 
-### Available Models
+### 3. Resize Image
 
-You can choose different ollama models based on your VRAM capacity:
+Resizes the generated image while maintaining aspect ratio:
 
-- `gemma3:1b` (815MB VRAM) - Lightweight
-- `gemma3:4b` (3.3GB VRAM) - Default, balanced
-- `gemma3:12b` (8.1GB VRAM) - High quality
-- `gemma3:27b` (17GB VRAM) - Best quality
+```bash
+python resize_image.py \
+  --input <path_to_input.webp> \
+  --output <path_to_output.webp> \
+  --width 1280 \
+  --height 670 \
+  --quality 80
+```
+
+## Parameters
+
+### Summarize Article
+- `--article`: Path to the Markdown article file
+- `--output`: Path to save the generated prompt as JSON
+
+### Generate Image
+- `--prompt-file`: Path to the JSON file containing the generated prompt
+- `--fixed-prompt`: Fixed prompt template. Use `{content}` where you want to insert the generated prompt
+- `--workflow`: Path to ComfyUI workflow JSON file
+- `--output`: Path to save the generated image
+- `--clear-cache`: (Optional) Clear ComfyUI cache before generation
+- `--webp-quality`: (Optional) WebP compression quality (0-100, default: 80)
+
+### Resize Image
+- `--input`: Path to the input image
+- `--output`: Path to save the resized image
+- `--width`: Target width in pixels
+- `--height`: Target height in pixels
+- `--quality`: (Optional) WebP compression quality (0-100, default: 80)
+
+## Workflows
+
+Two workflow configurations are provided for different models:
+
+### SD2 Workflow
+- Initial generation at 1024x576
+- Upscale by factor 1.5 using Latent Upscale
+- Second pass with denoise 0.6
+
+### SD3 Workflow
+- Initial generation at 1024x576
+- Upscale by factor 1.3 using Latent Upscale
+- Second pass with denoise 0.3
 
 ## Output
 
-- Generated images are saved in WebP format
-- Output filename: `<article_filename>.webp`
-- Images are saved in the same directory as the article file
-
-## Error Handling
-
-The program will stop and display an error message if any errors occur during execution.
+- Generated images are saved in WebP format with configurable quality
+- Images can be automatically resized to target dimensions while maintaining aspect ratio
+- Original aspect ratio is preserved during resizing
 
 ## Testing
 
-Run the test script in the `tests` directory:
+Run the test scripts in the `tests` directory:
 
 ```bash
 cd tests
-run_test.bat
+generate_test_sd2.bat  # Test with SD2 workflow
+generate_test_sd3.bat  # Test with SD3 workflow
 ```
+
+## Error Handling
+
+The program will:
+- Display warnings if aspect ratios differ during resizing
+- Show compression ratios and size changes
+- Stop and display error messages if any errors occur during execution
 
 ## License
 

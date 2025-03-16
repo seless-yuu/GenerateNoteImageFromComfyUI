@@ -1,79 +1,112 @@
 # GenerateNoteImageFromComfyUI
 
-ComfyUIとollamaを使用して記事文章から画像を生成するプログラム
+ComfyUIとollamaを使用して、記事のテキストから画像を生成します。
 
 ## 概要
 
-このプログラムは以下の手順で記事文章から画像を生成します：
+このプログラムは以下の手順で記事のテキストから画像を生成します：
 
 1. ollamaを使用して記事を分析し、画像生成用のプロンプトを生成
-2. 生成されたプロンプトと固定プロンプトを結合
+2. 生成されたプロンプトと固定プロンプトを組み合わせ
 3. ComfyUIのAPIを使用して画像を生成
+4. 目的のサイズに画像をリサイズ
 
-## 必要環境
+## 必要条件
 
 - Python 3.x
-- ComfyUI（起動済みであること）
-- ollama（未起動の場合は自動的に起動されます）
+- ComfyUI（起動済み）
+- ollama（未起動の場合は自動的に起動）
 
 ## インストール
 
 1. このリポジトリをクローン
-2. 依存パッケージのインストール：
+2. 依存関係をインストール：
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## 使用方法
+## コマンド
+
+機能は3つの個別のコマンドに分かれています：
+
+### 1. 記事の要約
+
+記事からプロンプトを生成します：
 
 ```bash
-python article_to_image.py \
-  --article <記事ファイルのパス.md> \
-  --prompt "固定プロンプト {content}" \
-  --workflow <ワークフローファイルのパス.json> \
-  --clear-cache \
-  --ollama-model <モデル名>
+python summarize_article.py \
+  --article <記事のパス.md> \
+  --output <プロンプトの出力先.json>
 ```
 
-### パラメータ
+### 2. 画像生成
 
-- `--article`: Markdown形式の記事ファイルのパス
-- `--prompt`: 固定プロンプトのテンプレート。`{content}`の部分に生成されたプロンプトが挿入されます
+プロンプトを使用して画像を生成します：
+
+```bash
+python generate_image.py \
+  --prompt-file <プロンプトファイル.json> \
+  --fixed-prompt "固定プロンプト {content}" \
+  --workflow <ワークフローファイル.json> \
+  --output <出力画像.webp> \
+  --clear-cache \
+  --webp-quality 80
+```
+
+### 3. 画像リサイズ
+
+生成された画像をアスペクト比を維持したままリサイズします：
+
+```bash
+python resize_image.py \
+  --input <入力画像.webp> \
+  --output <出力画像.webp> \
+  --width 1280 \
+  --height 670 \
+  --quality 80
+```
+
+## パラメータ
+
+### 記事要約
+- `--article`: Markdown記事ファイルのパス
+- `--output`: 生成されたプロンプトを保存するJSONファイルのパス
+
+### 画像生成
+- `--prompt-file`: 生成されたプロンプトを含むJSONファイルのパス
+- `--fixed-prompt`: 固定プロンプトのテンプレート。生成されたプロンプトを挿入する位置に`{content}`を使用
 - `--workflow`: ComfyUIのワークフローJSONファイルのパス
-  - ワークフローには"InputPrompt"ノードが含まれている必要があります
+- `--output`: 生成画像の保存先パス
 - `--clear-cache`: （オプション）生成前にComfyUIのキャッシュをクリア
-- `--ollama-model`: （オプション）使用するollamaモデルを指定（デフォルト: gemma3:4b）
+- `--webp-quality`: （オプション）WebP圧縮品質（0-100、デフォルト：80）
 
-### 使用例
+### 画像リサイズ
+- `--input`: 入力画像のパス
+- `--output`: リサイズ後の画像の保存先パス
+- `--width`: 目標の幅（ピクセル）
+- `--height`: 目標の高さ（ピクセル）
+- `--quality`: （オプション）WebP圧縮品質（0-100、デフォルト：80）
 
-```bash
-python article_to_image.py \
-  --article article.md \
-  --prompt "photorealistic, high quality, detailed, {content}" \
-  --workflow workflow.json \
-  --clear-cache \
-  --ollama-model gemma3:4b
-```
+## ワークフロー
 
-### 利用可能なモデル
+2つのワークフロー設定が用意されています：
 
-VRAMの容量に応じて以下のollamaモデルを選択できます：
+### SD2ワークフロー
+- 初期生成サイズ：1024x576
+- Latent Upscaleで1.5倍に拡大
+- 2段階目の生成でノイズ除去率0.6
 
-- `gemma3:1b` (VRAM 815MB) - 軽量
-- `gemma3:4b` (VRAM 3.3GB) - デフォルト、バランス型
-- `gemma3:12b` (VRAM 8.1GB) - 高品質
-- `gemma3:27b` (VRAM 17GB) - 最高品質
+### SD3ワークフロー
+- 初期生成サイズ：1024x576
+- Latent Upscaleで1.3倍に拡大
+- 2段階目の生成でノイズ除去率0.3
 
 ## 出力
 
-- 生成された画像はWebP形式で保存されます
-- 出力ファイル名：`<記事ファイル名>.webp`
-- 画像は記事ファイルと同じディレクトリに保存されます
-
-## エラー処理
-
-実行中にエラーが発生した場合、プログラムは停止しエラーメッセージを表示します。
+- 生成された画像はWebP形式で保存（品質設定可能）
+- 目標サイズにアスペクト比を維持したままリサイズ可能
+- リサイズ時は元のアスペクト比を保持
 
 ## テスト
 
@@ -81,9 +114,17 @@ VRAMの容量に応じて以下のollamaモデルを選択できます：
 
 ```bash
 cd tests
-run_test.bat
+generate_test_sd2.bat  # SD2ワークフローのテスト
+generate_test_sd3.bat  # SD3ワークフローのテスト
 ```
+
+## エラー処理
+
+プログラムは以下を行います：
+- リサイズ時にアスペクト比が異なる場合は警告を表示
+- 圧縮率とサイズ変更の情報を表示
+- エラーが発生した場合は処理を停止してエラーメッセージを表示
 
 ## ライセンス
 
-このプロジェクトはMITライセンスの下で公開されています - 詳細は[LICENSE](LICENSE)ファイルを参照してください。 
+このプロジェクトはMITライセンスの下で公開されています - 詳細は[LICENSE](LICENSE)ファイルを参照してください。

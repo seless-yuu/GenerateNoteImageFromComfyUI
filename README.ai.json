@@ -7,14 +7,16 @@
     "license": "MIT",
     "languages": ["Python"],
     "created_at": "2024-03-15",
-    "updated_at": "2024-03-15",
+    "updated_at": "2024-03-20",
     "keywords": [
       "image-generation",
       "text-to-image",
       "comfyui",
       "ollama",
       "ai",
-      "markdown"
+      "markdown",
+      "webp",
+      "image-resize"
     ]
   },
   "requirements": {
@@ -53,7 +55,7 @@
         {
           "name": "pillow",
           "version": ">=10.2.0",
-          "purpose": "Image processing operations"
+          "purpose": "Image processing and WebP compression"
         },
         {
           "name": "python-dotenv",
@@ -65,55 +67,116 @@
   },
   "api": {
     "command_line": {
-      "program": "article_to_image.py",
-      "arguments": [
+      "programs": [
         {
-          "name": "article",
-          "type": "string",
-          "required": true,
-          "description": "Path to Markdown article file",
-          "format": "file_path"
+          "name": "summarize_article.py",
+          "description": "Generate prompt from article",
+          "arguments": [
+            {
+              "name": "article",
+              "type": "string",
+              "required": true,
+              "description": "Path to Markdown article file",
+              "format": "file_path"
+            },
+            {
+              "name": "output",
+              "type": "string",
+              "required": true,
+              "description": "Path to save generated prompt as JSON",
+              "format": "file_path"
+            }
+          ]
         },
         {
-          "name": "prompt",
-          "type": "string",
-          "required": true,
-          "description": "Fixed prompt template with {content} placeholder",
-          "format": "text"
+          "name": "generate_image.py",
+          "description": "Generate image using prompt",
+          "arguments": [
+            {
+              "name": "prompt-file",
+              "type": "string",
+              "required": true,
+              "description": "Path to prompt JSON file",
+              "format": "file_path"
+            },
+            {
+              "name": "fixed-prompt",
+              "type": "string",
+              "required": true,
+              "description": "Fixed prompt template with {content} placeholder",
+              "format": "text"
+            },
+            {
+              "name": "workflow",
+              "type": "string",
+              "required": true,
+              "description": "Path to ComfyUI workflow JSON file",
+              "format": "file_path"
+            },
+            {
+              "name": "output",
+              "type": "string",
+              "required": true,
+              "description": "Path to save generated image",
+              "format": "file_path"
+            },
+            {
+              "name": "clear-cache",
+              "type": "boolean",
+              "required": false,
+              "default": false,
+              "description": "Clear ComfyUI cache before generation"
+            },
+            {
+              "name": "webp-quality",
+              "type": "integer",
+              "required": false,
+              "default": 80,
+              "min": 0,
+              "max": 100,
+              "description": "WebP compression quality"
+            }
+          ]
         },
         {
-          "name": "workflow",
-          "type": "string",
-          "required": true,
-          "description": "Path to ComfyUI workflow JSON file",
-          "format": "file_path"
-        },
-        {
-          "name": "comfyui-url",
-          "type": "string",
-          "required": false,
-          "default": "http://127.0.0.1:8188",
-          "description": "ComfyUI API URL",
-          "format": "url"
-        },
-        {
-          "name": "clear-cache",
-          "type": "boolean",
-          "required": false,
-          "default": false,
-          "description": "Clear ComfyUI cache after execution"
-        },
-        {
-          "name": "ollama-model",
-          "type": "string",
-          "required": false,
-          "default": "gemma3:4b",
-          "description": "Ollama model name",
-          "enum": [
-            "gemma3:1b",
-            "gemma3:4b",
-            "gemma3:12b",
-            "gemma3:27b"
+          "name": "resize_image.py",
+          "description": "Resize image while maintaining aspect ratio",
+          "arguments": [
+            {
+              "name": "input",
+              "type": "string",
+              "required": true,
+              "description": "Path to input image",
+              "format": "file_path"
+            },
+            {
+              "name": "output",
+              "type": "string",
+              "required": true,
+              "description": "Path to save resized image",
+              "format": "file_path"
+            },
+            {
+              "name": "width",
+              "type": "integer",
+              "required": true,
+              "description": "Target width in pixels"
+            },
+            {
+              "name": "height",
+              "type": "integer",
+              "required": true,
+              "description": "Target height in pixels"
+            },
+            {
+              "name": "quality",
+              "type": "integer",
+              "required": false,
+              "default": 80,
+              "min": 0,
+              "max": 100,
+              "description": "WebP compression quality"
+            }
           ]
         }
       ]
@@ -123,50 +186,59 @@
     "steps": [
       {
         "order": 1,
-        "name": "read_article",
-        "description": "Read Markdown article file",
-        "input": "file_path",
-        "output": "text"
+        "name": "summarize_article",
+        "description": "Generate prompt from article",
+        "input": "article_path",
+        "output": "prompt_json"
       },
       {
         "order": 2,
-        "name": "generate_prompt",
-        "description": "Generate image prompt using ollama",
-        "input": "article_text",
-        "output": "generated_prompt"
-      },
-      {
-        "order": 3,
-        "name": "create_final_prompt",
-        "description": "Combine fixed and generated prompts",
-        "input": ["fixed_prompt", "generated_prompt"],
-        "output": "final_prompt"
-      },
-      {
-        "order": 4,
         "name": "generate_image",
         "description": "Generate image using ComfyUI",
-        "input": ["workflow_data", "final_prompt"],
-        "output": "image_name",
+        "input": ["prompt_json", "workflow_json"],
+        "output": "generated_image",
         "notes": {
-          "seed": "Random seed is used for image generation (seed=-1 in KSampler node)",
-          "randomization": "Each execution will produce a different image due to random seed"
+          "workflows": {
+            "sd2": {
+              "initial_size": "1024x576",
+              "upscale_factor": 1.5,
+              "denoise": 0.6
+            },
+            "sd3": {
+              "initial_size": "1024x576",
+              "upscale_factor": 1.3,
+              "denoise": 0.3
+            }
+          }
         }
       },
       {
-        "order": 5,
-        "name": "save_image",
-        "description": "Save image in WebP format",
-        "input": ["image_name", "article_path"],
-        "output": "output_path"
+        "order": 3,
+        "name": "resize_image",
+        "description": "Resize image to target dimensions",
+        "input": ["generated_image", "target_dimensions"],
+        "output": "final_image",
+        "notes": {
+          "aspect_ratio": "Maintained during resize",
+          "default_size": "1280x670"
+        }
       }
     ]
   },
   "output": {
     "file": {
       "format": "webp",
-      "naming": "{article_filename}.webp",
-      "location": "same as input article"
+      "compression": {
+        "type": "lossy",
+        "quality": {
+          "default": 80,
+          "range": [0, 100]
+        }
+      },
+      "dimensions": {
+        "target": "1280x670",
+        "aspect_ratio": "preserved"
+      }
     }
   },
   "error_handling": {
@@ -174,7 +246,7 @@
     "error_types": [
       {
         "type": "FileNotFoundError",
-        "scope": ["article", "workflow"],
+        "scope": ["article", "workflow", "prompt_json"],
         "action": "terminate"
       },
       {
@@ -184,39 +256,16 @@
       },
       {
         "type": "RuntimeError",
-        "scope": ["image_generation", "prompt_generation"],
+        "scope": ["image_generation", "prompt_generation", "image_resize"],
         "action": "terminate"
       }
-    ]
-  },
-  "resources": {
-    "vram_requirements": {
-      "models": [
-        {
-          "name": "gemma3:1b",
-          "vram": "815MB",
-          "performance": "lightweight"
-        },
-        {
-          "name": "gemma3:4b",
-          "vram": "3.3GB",
-          "performance": "balanced"
-        },
-        {
-          "name": "gemma3:12b",
-          "vram": "8.1GB",
-          "performance": "high_quality"
-        },
-        {
-          "name": "gemma3:27b",
-          "vram": "17GB",
-          "performance": "best_quality"
-        }
-      ],
-      "comfyui": {
-        "base": "4GB",
-        "note": "Varies based on workflow and model selection"
+    ],
+    "warnings": [
+      {
+        "type": "AspectRatioMismatch",
+        "scope": "image_resize",
+        "action": "warn_and_continue"
       }
-    }
+    ]
   }
 } 
