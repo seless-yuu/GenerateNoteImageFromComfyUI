@@ -6,10 +6,10 @@ Generate images from article text using ComfyUI and ollama.
 
 This program generates images from article text through the following steps:
 
-1. Using ollama to analyze the article and generate image prompts
-2. Combining the generated prompts with fixed prompts
-3. Using ComfyUI's API to generate images
-4. Resizing images to the desired dimensions
+1. Analyze the article using ollama to generate an image prompt
+2. Combine the generated prompt with a fixed prompt
+3. Generate an image using ComfyUI's API
+4. Resize the image to the target size
 
 ## Requirements
 
@@ -115,13 +115,15 @@ Two workflow configurations are provided for different models:
 
 ## Testing
 
-Run the test scripts in the `tests` directory:
+You can test each functionality using the following batch files:
 
 ```bash
-cd tests
-generate_test_sd2.bat  # Test with SD2 workflow
-generate_test_sd3.bat  # Test with SD3 workflow
+summarize.bat  # Test article summarization
+generate_sd2.bat  # Test image generation with SD2 workflow
+generate_sd3.bat  # Test image generation with SD3 workflow
 ```
+
+Each batch file has the necessary parameters pre-configured and is ready to run.
 
 ## Error Handling
 

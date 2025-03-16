@@ -115,13 +115,15 @@ python resize_image.py \
 
 ## テスト
 
-`tests`ディレクトリのテストスクリプトを実行：
+以下のバッチファイルを使用して各機能をテストできます：
 
 ```bash
-cd tests
-generate_test_sd2.bat  # SD2ワークフローのテスト
-generate_test_sd3.bat  # SD3ワークフローのテスト
+summarize.bat  # 記事の要約テスト
+generate_sd2.bat  # SD2ワークフローでの画像生成テスト
+generate_sd3.bat  # SD3ワークフローでの画像生成テスト
 ```
+
+各バッチファイルは必要なパラメータが設定済みで、すぐに実行できます。
 
 ## エラー処理
 
