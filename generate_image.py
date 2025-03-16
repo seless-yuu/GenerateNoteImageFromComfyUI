@@ -177,8 +177,11 @@ def generate_image_with_comfyui(workflow_data, final_prompt, comfyui_url, seed=N
 def save_image(image_name, output_path, comfyui_url, webp_quality=80):
     """ComfyUIから画像を取得してwebp形式で保存（非可逆圧縮）"""
     try:
-        # 出力ディレクトリが存在しない場合は作成
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        # 出力パスの処理
+        output_dir = os.path.dirname(output_path)
+        if output_dir:
+            # 出力ディレクトリが指定されている場合は作成
+            os.makedirs(output_dir, exist_ok=True)
         
         # 画像をダウンロード
         image_url = f"{comfyui_url}/view?filename={image_name}"
