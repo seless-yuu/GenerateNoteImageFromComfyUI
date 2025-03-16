@@ -2,9 +2,9 @@
   "3": {
     "inputs": {
       "seed": 0,
-      "steps": 20,
-      "cfg": 6,
-      "sampler_name": "euler_ancestral",
+      "steps": 28,
+      "cfg": 4.5,
+      "sampler_name": "dpmpp_2m",
       "scheduler": "sgm_uniform",
       "denoise": 1,
       "model": [
@@ -67,7 +67,7 @@
   },
   "40": {
     "inputs": {
-      "text": "low quality, bad anatomy, bad proportions, bad hands, blurry, deformed, mutated, ugly, watermark, signature, text, nsfw",
+      "text": "low quality, bad anatomy, bad proportions, bad hands, blurry, deformed, mutated, ugly, watermark, nsfw",
       "clip": [
         "42",
         0
@@ -110,10 +110,10 @@
   "61": {
     "inputs": {
       "seed": 0,
-      "steps": 20,
-      "cfg": 6,
-      "sampler_name": "dpmpp_2m_sde_gpu",
-      "scheduler": "karras",
+      "steps": 28,
+      "cfg": 4.5,
+      "sampler_name": "dpmpp_2m",
+      "scheduler": "sgm_uniform",
       "denoise": 0.6,
       "model": [
         "4",
