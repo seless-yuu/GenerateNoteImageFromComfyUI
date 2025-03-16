@@ -59,8 +59,8 @@
     "inputs": {
       "text": "a beautiful landscape",
       "clip": [
-        "4",
-        1
+        "42",
+        0
       ]
     },
     "class_type": "CLIPTextEncode"
@@ -69,11 +69,21 @@
     "inputs": {
       "text": "low quality, bad anatomy, bad proportions, bad hands, blurry, deformed, mutated, ugly, watermark, signature, text, nsfw",
       "clip": [
-        "4",
-        1
+        "42",
+        0
       ]
     },
     "class_type": "CLIPTextEncode"
+  },
+  "42": {
+    "inputs": {
+      "clip_name1": "clip_l.safetensors",
+      "clip_name2": "clip_g.safetensors",
+      "clip_name3": "t5xxl_fp16.safetensors",
+      "type": "triple",
+      "device": "default"
+    },
+    "class_type": "TripleCLIPLoader"
   },
   "53": {
     "inputs": {
