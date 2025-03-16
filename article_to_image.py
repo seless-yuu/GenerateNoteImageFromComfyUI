@@ -6,6 +6,8 @@ import time
 import gc
 import random
 from pathlib import Path
+from PIL import Image
+from io import BytesIO
 
 def parse_arguments():
     """コマンドライン引数をパースする"""
@@ -17,6 +19,7 @@ def parse_arguments():
     parser.add_argument('--clear-cache', action='store_true', help='実行後にComfyUIのキャッシュをクリアする')
     parser.add_argument('--ollama-model', default='gemma3:4b', help='ollamaの使用するモデル名')
     parser.add_argument('--seed', type=int, help='画像生成用のシード値（指定しない場合はランダム）')
+    parser.add_argument('--webp-quality', type=int, default=80, help='WebP画像の品質（0-100、デフォルト80）')
     return parser.parse_args()
 
 def read_article(file_path):
@@ -219,8 +222,8 @@ def generate_image_with_comfyui(workflow_data, final_prompt, comfyui_url, seed=N
     except Exception as e:
         raise Exception(f"画像生成に失敗しました: {e}")
 
-def save_image(image_name, article_path, comfyui_url):
-    """ComfyUIから画像を取得してwebp形式で保存"""
+def save_image(image_name, article_path, comfyui_url, webp_quality=80):
+    """ComfyUIから画像を取得してwebp形式で保存（非可逆圧縮）"""
     try:
         # 記事ファイルのディレクトリを取得
         article_dir = os.path.dirname(article_path)
@@ -232,9 +235,26 @@ def save_image(image_name, article_path, comfyui_url):
         response = requests.get(image_url)
         response.raise_for_status()
         
-        # webp形式で保存
-        with open(output_path, 'wb') as f:
-            f.write(response.content)
+        # PILで画像を開く
+        image = Image.open(BytesIO(response.content))
+        
+        # WebP形式で保存（非可逆圧縮）
+        # quality: 0-100の範囲で指定（低いほど圧縮率が高く、画質は低下）
+        # lossless: Falseで非可逆圧縮を指定
+        # method: 0-6の範囲で圧縮方法を指定（6が最も圧縮率が高いが、処理時間も長い）
+        image.save(
+            output_path,
+            'WEBP',
+            quality=webp_quality,
+            lossless=False,
+            method=4
+        )
+        
+        # 圧縮率の情報を表示
+        original_size = len(response.content)
+        compressed_size = os.path.getsize(output_path)
+        compression_ratio = (1 - compressed_size / original_size) * 100
+        print(f"圧縮率: {compression_ratio:.1f}%（{original_size:,} → {compressed_size:,} bytes）")
         
         return output_path
     except Exception as e:
@@ -270,7 +290,7 @@ def main():
         image_name = generate_image_with_comfyui(workflow_data, final_prompt, args.comfyui_url, args.seed)
         
         # 画像の保存
-        output_path = save_image(image_name, args.article, args.comfyui_url)
+        output_path = save_image(image_name, args.article, args.comfyui_url, args.webp_quality)
         print(f"画像を保存しました: {output_path}")
         
         # 生成後のキャッシュクリア
