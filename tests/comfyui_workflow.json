@@ -98,13 +98,11 @@
         "3",
         0
       ],
-      "upscale_method": "area",
-      "scale_by": 1.5,
-      "width": 1536,
-      "height": 864,
-      "crop": "disabled"
+      "mode": "nearest",
+      "factor": 1.5,
+      "align": "true"
     },
-    "class_type": "LatentUpscale"
+    "class_type": "Latent Upscale by Factor (WAS)"
   },
   "61": {
     "inputs": {

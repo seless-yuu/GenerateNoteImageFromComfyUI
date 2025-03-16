@@ -99,13 +99,11 @@
         "3",
         0
       ],
-      "upscale_method": "area",
-      "scale_by": 1.3,
-      "width": 1332,
-      "height": 752,
-      "crop": "disabled"
+      "mode": "nearest",
+      "factor": 1.3,
+      "align": "true"
     },
-    "class_type": "LatentUpscale"
+    "class_type": "Latent Upscale by Factor (WAS)"
   },
   "61": {
     "inputs": {
@@ -114,7 +112,7 @@
       "cfg": 4.5,
       "sampler_name": "dpmpp_2m",
       "scheduler": "sgm_uniform",
-      "denoise": 0.3,
+      "denoise": 0.5,
       "model": [
         "4",
         0
