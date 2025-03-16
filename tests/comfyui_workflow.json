@@ -86,11 +86,11 @@
   },
   "53": {
     "inputs": {
-      "width": 1344,
-      "height": 768,
+      "width": 1024,
+      "height": 576,
       "batch_size": 1
     },
-    "class_type": "EmptySD3LatentImage"
+    "class_type": "EmptyLatent"
   },
   "60": {
     "inputs": {
@@ -98,10 +98,10 @@
         "3",
         0
       ],
-      "upscale_method": "nearest-exact",
+      "upscale_method": "area",
       "scale_by": 1.5,
-      "width": 2016,
-      "height": 1152,
+      "width": 1536,
+      "height": 864,
       "crop": "disabled"
     },
     "class_type": "LatentUpscale"
