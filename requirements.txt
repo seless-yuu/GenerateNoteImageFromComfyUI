@@ -1,4 +1,4 @@
 requests>=2.31.0
 ollama>=0.1.6
-pillow>=10.2.0  # for image processing
+pillow>=10.2.0  # for image processing and WebP compression
 python-dotenv>=1.0.0  # for environment variables 
